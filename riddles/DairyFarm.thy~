@@ -1,0 +1,109 @@
+theory DairyFarm
+imports Main
+begin
+
+(* n*n div 10 is odd \<Longrightarrow>
+  n*n mod 10 = 6  *)
+
+lemma gencase:
+  "n mod k = l \<Longrightarrow>
+  n = k*(n div k) + l"
+  for n :: nat
+  apply clarsimp
+  done
+
+lemma plusone_squared:
+  "(n+1) * (n+1) = (n*n) + (n + n + 1)" for n::nat
+  apply clarsimp
+  done
+
+lemma plus_mod_expand:
+  "(a+b) mod k = (a mod k + b) mod k" for a::nat
+  by presburger
+
+lemma n_squared_mod_k':
+  "(n*n) mod k = l \<Longrightarrow>
+  (n+1) * (n+1) mod k = (l+n+n+1) mod k" for n::nat
+  apply (subst plusone_squared)
+  apply (subst plus_mod_expand)
+  apply presburger
+  done
+
+
+lemma n_squared_mod_k:
+  "(n+1) * (n+1) mod k = ((n*n) mod k+n+n+1) mod k" for n::nat
+  apply (subst plusone_squared)
+  apply (subst plus_mod_expand)
+  apply presburger
+  done
+  
+
+
+
+lemma zerocase:
+  "n*(n::nat) mod 20 = 7 \<Longrightarrow>
+  (n+1) * (n+1) mod 20 = 1"
+  apply (subst n_squared_mod_k)
+  apply (clarsimp)
+  apply (clarsimp simp del: mult_Suc_right mult_Suc)
+  oops
+
+lemma
+  "Suc n = n+1"
+  oops
+
+lemma expand_in:
+  "s \<in> S \<Longrightarrow>
+  \<exists>x. s = x \<and> x \<in> S"
+  by simp
+
+
+lemma ok:
+  "(n*n) mod k = ((n mod k) * (n mod k)) mod k" for n::nat
+  by (simp add: mod_mult_eq)
+
+
+lemma brute:
+  "n mod k \<in> {0 ..< k}" for n k :: nat
+  apply (clarsimp simp: atLeastLessThan_def)
+  find_consts name:mod
+
+
+thm mod_eq_0D
+lemma zerocase:
+  "(n*n) mod 10 = 0 \<Longrightarrow>
+  n mod 10 = 0" for n z::nat
+  apply (subst (asm) ok)
+  apply (drule mod_eq_0D)
+  apply clarsimp
+  sledgehammer
+  
+  
+  using mod_eq_0D by presburger
+
+lemma this:
+  "(n*n) mod 20 \<in> {0, 1, 4, 9, 16, 5}" for n::nat
+  apply (induct n)
+   apply simp
+  apply (subst ok)
+  apply (subst Suc_eq_plus1)+
+  apply (subst n_squared_mod_k)
+  apply (subst ok)
+  
+
+
+  apply (induct n, simp)
+  apply (drule expand_in)
+  apply (elim exE conjE)
+  apply (subst Suc_eq_plus1)+
+  apply (subst n_squared_mod_k, assumption)
+  apply clarsimp
+  apply (elim disjE; clarsimp)
+       defer
+      oops (*its true, just hard *)
+
+
+
+       
+
+end
